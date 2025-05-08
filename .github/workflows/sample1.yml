@@ -3,7 +3,7 @@ name: Sample Workflow 1
 on:
   push:
     branches:
-      - sample-branch
+      - main
   workflow_dispatch:
     inputs:
       name:
