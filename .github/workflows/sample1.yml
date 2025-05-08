@@ -1,9 +1,9 @@
 name: Sample Workflow 1
 
 on:
-  push:
-    branches:
-      - sample-branch
+  # push:
+  #   branches:
+  #     - sample-branch
   workflow_dispatch:
     inputs:
       name:
