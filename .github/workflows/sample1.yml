@@ -1,0 +1,22 @@
+name: Sample Workflow 1
+
+on:
+  push:
+    branches:
+      - sample-branch
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Your name'
+        required: true
+      environment:
+        description: 'Target environment'
+        required: true
+
+jobs:
+  print-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Hello, ${{ github.event.inputs.name }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
