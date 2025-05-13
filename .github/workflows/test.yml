@@ -1,0 +1,38 @@
+name: test
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        env:
+          PROJECT_NUMBER: ${{ secrets.PROJECT_NUMBER }}
+          POOL_NAME: ${{ secrets.POOL_NAME }}
+          PROVIDER_NAME: ${{ secrets.PROVIDER_NAME }}
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.POOL_NAME }}/providers/${{ secrets.PROVIDER_NAME }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Set up GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Get pods in test namespace
+        run: kubectl get pods -n test
+
+      - name: Get pods in test2 namespace
+        run: kubectl get pods -n test2
