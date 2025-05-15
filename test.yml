@@ -50,6 +50,16 @@ jobs:
         uses: azure/setup-helm@v3
         # Helm CLI のインストール
 
+      # 5. リリースが存在するか確認し、削除（強制同期）
+      - name: 🧹 Uninstall existing release (if exists)
+        run: |
+          if helm status $RELEASE_NAME -n $NAMESPACE > /dev/null 2>&1; then
+            echo "Existing release found. Uninstalling..."
+            helm uninstall $RELEASE_NAME -n $NAMESPACE
+          else
+            echo "No existing release found. Skipping uninstall."
+          fi
+
       - name: Helm lint
         run: |
           helm lint "$HELM_CHART_PATH"
