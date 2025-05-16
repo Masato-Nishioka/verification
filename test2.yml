@@ -1,0 +1,62 @@
+name: Apply Helm Template to GKE with Prune
+
+on:
+  push:
+    paths:
+      - 'charts/my-app/**'
+    branches:
+      - main
+
+env:
+  GCP_PROJECT_ID: your-gcp-project-id
+  GKE_CLUSTER_NAME: your-cluster-name
+  GKE_CLUSTER_REGION: your-cluster-region
+  KUBERNETES_NAMESPACE: default
+  APP_LABEL: my-app
+  HELM_CHART_PATH: ./charts/my-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up kubectl
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Authenticate kubectl to GKE
+        run: |
+          gcloud container clusters get-credentials "$GKE_CLUSTER_NAME" \
+            --region "$GKE_CLUSTER_REGION" \
+            --project "$GCP_PROJECT_ID"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Render Helm templates
+        run: |
+          helm template my-app "$HELM_CHART_PATH" \
+            --namespace "$KUBERNETES_NAMESPACE" \
+            --include-crds \
+            --set global.app="$APP_LABEL" \
+          > manifest.yaml
+
+      - name: Apply with prune
+        run: |
+          kubectl apply -f manifest.yaml \
+            --namespace "$KUBERNETES_NAMESPACE" \
+            --prune \
+            --all \
+            --selector "app.kubernetes.io/name=${APP_LABEL}"
